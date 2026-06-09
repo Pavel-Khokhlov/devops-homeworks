@@ -27,7 +27,7 @@ test('edits title and description, then persists after reload', async ({
   await page.getByTestId('detail-save').click();
 
   // toast indicates save
-  await expect(page.getByText('Saved')).toBeVisible();
+  await expect(page.getByText('Saved').last()).toBeVisible();
 
   await page.reload();
   await expect(page.getByTestId('detail-title')).toHaveValue('Edited title');

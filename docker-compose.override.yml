@@ -1,0 +1,5 @@
+services:
+  back:
+    platform: linux/amd64
+  front:
+    platform: linux/amd64
