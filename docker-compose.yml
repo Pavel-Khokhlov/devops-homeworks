@@ -15,7 +15,7 @@ services:
       start_period: 20s   # ждем разворачивания базы данных
 
   back:
-    image: ${DOCKERHUB_USERNAME}/todo-back:${APP_VERSION}
+    image: ${DOCKERHUB_USERNAME}/back:${APP_VERSION}
     restart: unless-stopped
     environment:
       APP_VERSION: ${APP_VERSION}
@@ -30,7 +30,7 @@ services:
         condition: service_healthy
 
   front:
-    image: ${DOCKERHUB_USERNAME}/todo-front:${APP_VERSION}
+    image: ${DOCKERHUB_USERNAME}/front:${APP_VERSION}
     restart: unless-stopped
     ports:
       - 18080:80
