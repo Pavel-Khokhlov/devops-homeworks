@@ -1,0 +1,80 @@
+name: Deploy
+
+#checks  ← вызов typecheck.yaml через uses: (тот же reusable, что в pr-check.#yaml)
+#  ↓
+#build   ← matrix по сервисам, push образов с двумя тегами
+#  ↓
+#deploy  ← SSH на VPS, обновление .env, рестарт compose
+#  ↓
+#verify  ← make smoke-deployed против живого домена
+#  ↓
+#notify  ← отдельный job с if: always(), Telegram
+ 
+on:
+  push:
+    branches: [week4]
+ 
+jobs:
+  checks:
+    uses: ./.github/workflows/typecheck.yml
+
+  build:
+    needs: [checks]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [front, back]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enter to Docker Hub
+        run: docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASS }}
+      - name: Build and Push image
+        id: build-push
+        env:
+          IMAGE_SHA: ${{ secrets.DOCKER_USER }}/${{ matrix.service }}:sha-${{ github.sha }}
+          IMAGE_LATEST: ${{ secrets.DOCKER_USER }}/${{ matrix.service }}:latest
+        run: |
+          docker build -t $IMAGE_SHA -t $IMAGE_LATEST ./${{ matrix.service }}
+          docker push $IMAGE_SHA
+          docker push $IMAGE_LATEST
+          echo "image_sha=$IMAGE_SHA" >> $GITHUB_OUTPUT
+
+  deploy:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            sed -i "s|^APP_VERSION=.*|APP_VERSION=sha-${{ github.sha }}|" .env.development.compose
+            docker compose pull
+            docker compose up -d --no-deps back front
+        
+  verify:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Smoke
+        env:
+          E2E_BASE_URL: ${{ vars.VITE_API_URL }}
+        run: |
+          # vars.VITE_API_URL у нас вида https://домен/api → отрежем /api
+          export E2E_BASE_URL="${E2E_BASE_URL%/api}"
+          bash scripts/smoke.sh
+
+  notify:
+    needs: [checks, build, deploy, verify]
+    if: always()
+    uses: ./.github/workflows/notify.yml
+    with:
+      checks_result: ${{ needs.checks.result }}
+      build_result: ${{ needs.build.result }}
+      deploy_result: ${{ needs.deploy.result }}
+      verify_result: ${{ needs.verify.result }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}

@@ -1,6 +1,7 @@
 services:
   db:
     image: postgres:16-alpine
+    restart: unless-stopped
     env_file: .env.development.db
     ports:
       - 15432:5432
@@ -14,7 +15,10 @@ services:
       start_period: 20s   # ждем разворачивания базы данных
 
   back:
-    image: ${DOCKERHUB_USERNAME}/todo-back:${IMAGE_TAG}
+    image: ${DOCKERHUB_USERNAME}/todo-back:${APP_VERSION}
+    restart: unless-stopped
+    environment:
+      APP_VERSION: ${APP_VERSION}
     env_file:
       - .env.development.back
     volumes:
@@ -26,7 +30,8 @@ services:
         condition: service_healthy
 
   front:
-    image: ${DOCKERHUB_USERNAME}/todo-front:${IMAGE_TAG}
+    image: ${DOCKERHUB_USERNAME}/todo-front:${APP_VERSION}
+    restart: unless-stopped
     ports:
       - 18080:80
     depends_on:
