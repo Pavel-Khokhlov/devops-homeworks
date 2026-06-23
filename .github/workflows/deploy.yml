@@ -1,14 +1,4 @@
 name: Deploy
-
-#checks  ← вызов typecheck.yaml через uses: (тот же reusable, что в pr-check.#yaml)
-#  ↓
-#build   ← matrix по сервисам, push образов с двумя тегами
-#  ↓
-#deploy  ← SSH на VPS, обновление .env, рестарт compose
-#  ↓
-#verify  ← make smoke-deployed против живого домена
-#  ↓
-#notify  ← отдельный job с if: always(), Telegram
  
 on:
   push:
