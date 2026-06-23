@@ -21,11 +21,30 @@ jobs:
       - name: Build and Push image
         id: build-push
         env:
+          VAR_VITE_API_URL: ${{ vars.VITE_API_URL }}
           IMAGE_SHA: ${{ secrets.DOCKER_USER }}/${{ matrix.service }}:sha-${{ github.sha }}
           IMAGE_LATEST: ${{ secrets.DOCKER_USER }}/${{ matrix.service }}:latest
         run: |
-          docker build -t $IMAGE_SHA -t $IMAGE_LATEST ./${{ matrix.service }}
+          # Check VAR_VITE_API_URL - is empty?
+          if [ "${{ matrix.service }}" != "back" ] && [ -z "$VAR_VITE_API_URL" ]; then
+            echo "⚠️ Warning: VITE_API_URL is not set for ${{ matrix.service }}"
+            echo "Build will continue but frontend may not work correctly"
+          fi
+
+
+          if [ "${{ matrix.service }}" == "back" ]; then
+            docker build -t $IMAGE_SHA -t $IMAGE_LATEST ./${{ matrix.service }}
+          else
+            docker build \
+              -t $IMAGE_SHA \
+              -t $IMAGE_LATEST \
+              --build-arg VITE_API_URL=$VAR_VITE_API_URL \
+              ./${{ matrix.service }}
+          fi
+          echo "📤 Pushing $IMAGE_SHA"
           docker push $IMAGE_SHA
+    
+          echo "📤 Pushing $IMAGE_LATEST"
           docker push $IMAGE_LATEST
           echo "image_sha=$IMAGE_SHA" >> $GITHUB_OUTPUT
 
