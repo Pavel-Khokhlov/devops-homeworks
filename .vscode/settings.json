@@ -3,5 +3,8 @@
         "healthcheck",
         "myapp",
         "pgdata"
-    ]
+    ],
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "prettier.singleQuote": true
 }
