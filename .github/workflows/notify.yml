@@ -12,9 +12,6 @@ on:
       deploy_result:
         required: true
         type: string
-      verify_result:
-        required: true
-        type: string
     secrets:
       TELEGRAM_BOT_TOKEN:
         required: true
@@ -30,12 +27,10 @@ jobs:
           CHECKS="${{ inputs.checks_result }}"
           BUILD="${{ inputs.build_result }}"
           DEPLOY="${{ inputs.deploy_result }}"
-          VERIFY="${{ inputs.verify_result }}"
 
           echo "CHECKS: $CHECKS"
           echo "BUILD: $BUILD"
           echo "DEPLOY: $DEPLOY"
-          echo "VERIFY: $VERIFY"
     
           if [ "$CHECKS" != "success" ]; then
             TEXT="❌ Type-check упал%0A${{ github.repository }} @ ${{ github.ref_name }}%0A${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
@@ -43,8 +38,6 @@ jobs:
             TEXT="❌ Build упал%0A${{ github.repository }} @ ${{ github.ref_name }}%0A${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           elif [ "$DEPLOY" != "success" ]; then
             TEXT="❌ Deploy упал%0A${{ github.repository }} @ ${{ github.ref_name }}%0A${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.          run_id }}"
-          elif [ "$VERIFY" != "success" ]; then
-            TEXT="❌ Smoke не прошёл (задеплоено, но не отвечает корректно)%0A${{ github.repository }} @ ${{ github.ref_name }}%0A${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           else
             TEXT="✅ Деплой успешен%0A${{ github.repository }} @ ${{ github.ref_name }}%0AActor: ${{ github.actor }}%0AVersion: sha-${{ github.sha }}"
           fi
