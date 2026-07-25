@@ -6,7 +6,7 @@ on:
  
 jobs:
   checks:
-    uses: ./.github/workflows/pr-check.yaml
+    uses: ./.github/workflows/pr-check.yml
  
   build:
     needs: [checks]
@@ -50,7 +50,7 @@ jobs:
   notify:
     needs: [checks, build, deploy]
     if: always()
-    uses: ./.github/workflows/notify.yaml
+    uses: ./.github/workflows/notify.yml
     with:
       checks_result: ${{ needs.checks.result }}
       deploy_result: ${{ needs.deploy.result }}
