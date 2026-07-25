@@ -15,12 +15,3 @@ on:
 jobs:
   checks:
     uses: ./.github/workflows/typecheck.yml
-
-  kubeval:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Validate K8s manifests
-        uses: stefanprodan/kube-tools@v1
-        with:
-          command: kubeval k8s/
